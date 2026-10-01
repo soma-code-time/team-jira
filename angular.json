@@ -16,7 +16,8 @@
             "assets": [],
             "styles": [
               "src/styles.css"
-            ]
+            ],
+            "index": "src/index.html"
           }
         },
         "serve": {
