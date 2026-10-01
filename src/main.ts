@@ -3,6 +3,7 @@ import {Component, OnInit, inject} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {FormsModule} from '@angular/forms';
 import {createClient, SupabaseClient} from '@supabase/supabase-js';
+import { environment } from './config';
 
 type Status='TODO'|'IN_PROGRESS'|'DONE';
 
@@ -57,12 +58,12 @@ export class App implements OnInit {
  columns=[{status:'TODO' as Status,label:'To Do'},{status:'IN_PROGRESS' as Status,label:'In Progress'},{status:'DONE' as Status,label:'Done'}];
 
  constructor(){
-   const url=(globalThis as any).__SUPABASE_URL__ || '';
-   const key=(globalThis as any).__SUPABASE_ANON_KEY__ || '';
+   const url=environment.supabaseUrl;
+   const key=environment.supabaseAnonKey;
    this.db=createClient(url,key);
  }
  async ngOnInit(){
-   if(!(globalThis as any).__SUPABASE_URL__){ alert('Configure Supabase environment variables before using the app.'); return; }
+   if(!environment.supabaseUrl || !environment.supabaseAnonKey){ alert('Configure Supabase environment variables before using the app.'); return; }
    await this.load();
    const {data}=await this.db.from('users').select('*').order('name');
    this.users=data||[];

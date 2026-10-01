@@ -28,3 +28,7 @@ npm start
 Push this folder to GitHub, import the repo into Vercel, add the two environment variables, and deploy.
 
 The app uses Supabase Realtime, so task changes are shared with all open browsers without redeploying the UI.
+
+
+## Vercel
+Use `npm run build`. In Vercel add `SUPABASE_URL` and `SUPABASE_ANON_KEY` for Production. The build script generates `src/config.ts` from those variables.
