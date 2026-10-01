@@ -43,7 +43,7 @@ type Status='TODO'|'IN_PROGRESS'|'DONE';
  <div class="dialog" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
   <div class="dialog-header"><div><div class="dialog-title">{{editing.id?'Edit task':'Create task'}}</div><div class="dialog-sub">{{editing.id ? editing.task_key : 'Add a task to the shared board'}}</div></div><button type="button" class="close" (click)="cancelEdit()">×</button></div>
   <div class="dialog-body">
-   <label>Title<input [(ngModel)]="editing.title" placeholder="What needs to be done?" autofocus></label>
+   <label>Title<input [(ngModel)]="editing.title" placeholder="What needs to be done?" autofocus><span class="field-error" *ngIf="showTitleError">Please enter a task title.</span></label>
    <label>Description<textarea [(ngModel)]="editing.description" placeholder="Optional details"></textarea></label>
    <div class="row">
     <label>Assignee<select [(ngModel)]="editing.assignee_id"><option [ngValue]="null">Unassigned</option><option *ngFor="let u of users" [ngValue]="u.id">{{u.name}}</option></select></label>
@@ -53,7 +53,7 @@ type Status='TODO'|'IN_PROGRESS'|'DONE';
   </div>
   <div class="buttons">
    <button type="button" (click)="cancelEdit()" [disabled]="saving">Cancel</button>
-   <button type="button" class="primary save-btn" (click)="save()" [disabled]="saving || !editing.title?.trim()">{{saving?'Saving…':'Save task'}}</button>
+   <button type="button" class="primary save-btn" (click)="save()" [disabled]="saving">{{saving?'Saving…':'Save task'}}</button>
   </div>
  </div>
 </div>
@@ -64,7 +64,7 @@ export class App implements OnInit {
  private cdr=inject(ChangeDetectorRef);
  private zone=inject(NgZone);
  tasks:any[]=[]; users:any[]=[]; search=''; assigneeFilter=''; priorityFilter=''; dragged:any=null; editing:any=null;
- loading=true; saving=false;
+ loading=true; saving=false; showTitleError=false;
  columns=[{status:'TODO' as Status,label:'To Do'},{status:'IN_PROGRESS' as Status,label:'In Progress'},{status:'DONE' as Status,label:'Done'}];
 
  constructor(){this.db=createClient(environment.supabaseUrl,environment.supabaseAnonKey);}
@@ -101,14 +101,15 @@ export class App implements OnInit {
    const q=this.search.trim().toLowerCase();
    return this.tasks.filter(t=>t.status===s&&(!q||(`${t.task_key} ${t.title} ${t.description||''}`).toLowerCase().includes(q))&&(!this.assigneeFilter||String(t.assignee_id)===this.assigneeFilter)&&(!this.priorityFilter||t.priority===this.priorityFilter));
  }
- openNew(){this.editing={title:'',description:'',priority:'MEDIUM',assignee_id:null,due_date:null};this.cdr.detectChanges();}
- edit(t:any){this.editing={...t};this.cdr.detectChanges();}
+ openNew(){this.showTitleError=false; this.editing={title:'',description:'',priority:'MEDIUM',assignee_id:null,due_date:null};this.cdr.detectChanges();}
+ edit(t:any){this.showTitleError=false; this.editing={...t};this.cdr.detectChanges();}
  cancelEdit(){if(!this.saving){this.editing=null;this.cdr.detectChanges();}}
  closeOnBackdrop(e:MouseEvent){if(e.target===e.currentTarget)this.cancelEdit();}
 
  async save(){
    const e=this.editing;
-   if(!e?.title?.trim()||this.saving)return;
+   if(!e?.title?.trim()){this.showTitleError=true; this.cdr.detectChanges(); return;}
+   if(this.saving)return;
    this.saving=true; this.cdr.detectChanges();
    try {
      let result;
